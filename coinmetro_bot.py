@@ -34,10 +34,10 @@ def lambda_handler(event, _):
 def generate_text_response(message_part):
     if message_part.startswith('/volume'):
         total_volume, volumes = get_volume()
-        sorted_volumes = sorted(volumes.items(), key=lambda x:x[1], reverse=True)
-        top3 = '\n\t'.join([f"${sorted_volumes[i][0]}: ${sorted_volumes[i][1]:,.2f}" for i in range(3)])
+        nb_top = 3
+        top = format_top_volumes(volumes, nb_top)
         return f"The current 24h volume on Coinmetro is ${total_volume:,.2f}" \
-            f"\n\n Top 3: \n\t{top3}"
+            f"\n\n Top {nb_top}: {top}"
     elif message_part.startswith('/admin'):
         return "@xcmonika @xcmusab @herebycm @reddug @XCMkellyXCM @JensAtDenmark @medatank @WillDec"
     elif message_part.startswith('/start'):
@@ -56,6 +56,16 @@ def get_volume():
     else:
         print("API call failed.")
     return None
+    
+
+def format_top_volumes(volumes, nb_top=3):
+    sorted_volumes = sorted(volumes.items(), key=lambda x:x[1], reverse=True)
+    top = '\n\t'.join([format_volume(sorted_volumes[i]) for i in range(3)])
+    return f"\n\t{top}"
+    
+
+def format_volume(tuple):
+    return f"${tuple[0]}: ${tuple[1]:,.2f}"
 
 
 def calculate_volumes(price_data):
