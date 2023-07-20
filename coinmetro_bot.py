@@ -6,7 +6,7 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 COINMETRO_ENDPOINT = os.environ.get('COINMETRO_ENDPOINT')
 PRICES_ENDPOINT = "/exchange/prices"
-NOMINATING_ASSETS = ['USD', 'EUR', 'GBP']
+NOMINATING_ASSETS = ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'AUD']
 
 
 def lambda_handler(event, _):
@@ -33,8 +33,11 @@ def lambda_handler(event, _):
 
 def generate_text_response(message_part):
     if message_part.startswith('/volume'):
-        volume = get_volume()
-        return f"The current 24h volume on Coinmetro is ${volume:,.2f}"
+        total_volume, volumes = get_volume()
+        sorted_volumes = sorted(volumes.items(), key=lambda x:x[1], reverse=True)
+        top3 = '\n\t'.join([f"${sorted_volumes[i][0]}: ${sorted_volumes[i][1]:,.2f}" for i in range(3)])
+        return f"The current 24h volume on Coinmetro is ${total_volume:,.2f}" \
+            f"\n\n Top 3: \n\t{top3}"
     elif message_part.startswith('/admin'):
         return "@xcmonika @xcmusab @herebycm @reddug @XCMkellyXCM @JensAtDenmark @medatank @WillDec"
     elif message_part.startswith('/start'):
@@ -56,7 +59,8 @@ def get_volume():
 
 
 def calculate_volumes(price_data):
-    volume = 0
+    total_volume = 0
+    volumes = {}
     prices, rates = get_prices(price_data)
     for pair in price_data['24hInfo']:
         identifier = pair['pair']
@@ -64,8 +68,10 @@ def calculate_volumes(price_data):
         nominating_asset = get_nominating_asset(identifier)
         if nominating_asset in rates:
             price = prices[identifier] * rates[nominating_asset]
-            volume = volume + price * pair_volume
-    return volume
+            pair_volume = price * pair_volume
+            total_volume = total_volume + pair_volume
+            volumes.update({identifier: pair_volume})
+    return total_volume, volumes
 
 
 def get_prices(price_data):
