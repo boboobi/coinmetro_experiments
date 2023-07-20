@@ -34,9 +34,9 @@ def lambda_handler(event, _):
 def generate_text_response(message_part):
     if message_part.startswith('/volume'):
         volume = get_volume()
-        return f"The current 24h volume on Coinmetro is ${volume:.2f}."
+        return f"The current 24h volume on Coinmetro is ${volume:,.2f}"
     elif message_part.startswith('/admin'):
-        return "@xcmonika @xcmusab @herebycm @reddug @XCMkellyXCM @JensAtDenmark @medatank"
+        return "@xcmonika @xcmusab @herebycm @reddug @XCMkellyXCM @JensAtDenmark @medatank @WillDec"
     elif message_part.startswith('/start'):
         return "Hey, I'm an unofficial bot for Coinmetro. Use the /help " \
                "command to see an overview of currently available commands."
