@@ -46,12 +46,15 @@ def generate_text_response(message_part):
     elif command is Command.HELP:
         return "Here's an overview of commands : \n" \
                "/admin : ping admins \n" \
-               "/volume : get 24h volume"
+               "/volume : get 24h volume \n" \
+               "/code: get a link to the codebase"
     elif command is Command.VOLUME:
         return get_with_caching(command, get_volume)
     elif command is Command.ADMIN:
         return "@xcmonika @xcmusab @herebycm @reddug @XCMkellyXCM " \
                "@JensAtDenmark @medatank @WillDec"
+    elif command is Command.CODE:
+        return "See https://github.com/boboobi/coinmetro_experiments"
     return response
 
 
