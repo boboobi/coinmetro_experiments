@@ -85,7 +85,7 @@ def get_volume(nb_top=3):
 
 def format_top_volumes(volumes, nb_top=3):
     sorted_volumes = sorted(volumes.items(), key=lambda x: x[1], reverse=True)
-    top = '\n\t'.join([format_volume(sorted_volumes[i]) for i in range(3)])
+    top = '\n\t'.join([format_volume(sorted_volumes[i]) for i in range(nb_top)])
     return f"\n\t{top}"
 
 
@@ -96,46 +96,53 @@ def format_volume(tuple):
 def calculate_volumes(price_data):
     total_volume = 0
     volumes = {}
-    prices, rates = get_prices(price_data)
+    prices = get_prices(price_data)
     for pair in price_data['24hInfo']:
         identifier = pair['pair']
-        pair_volume = pair['v']
-        nominating_asset = get_nominating_asset(identifier)
-        if nominating_asset in rates:
-            price = prices[identifier] * rates[nominating_asset]
-            pair_volume = price * pair_volume
-            total_volume = total_volume + pair_volume
-            volumes.update({identifier: pair_volume})
+        if identifier in prices:
+            price, nominating_asset = prices[identifier]
+            rate = get_rate(nominating_asset, prices)
+            if rate is not None:
+                price_dollar = price * rate
+                pair_volume = price_dollar * pair['v']
+                total_volume = total_volume + pair_volume
+                volumes.update({identifier: pair_volume})
     return total_volume, volumes
 
 
 def get_prices(price_data):
     prices = {}
-    rates = {'USD': 1}
     for pair in price_data['latestPrices']:
         identifier = pair['pair']
-        prices.update({identifier: pair['price']})
         nominating_asset = get_nominating_asset(identifier)
-        if nominating_asset is not None and nominating_asset not in rates:
-            rates.update({nominating_asset: 1.0})
-    for asset in rates:
-        rates.update({asset: get_rate(asset, prices)})
-    return prices, rates
+        prices.update({identifier: (pair['price'], nominating_asset)})
+    return prices
 
 
 def get_rate(asset, prices):
+    if asset == 'USD':
+        return 1.0
     if f"{asset}USD" in prices:
-        return prices[f"{asset}USD"]
+        return prices[f"{asset}USD"][0]
     elif f"USD{asset}" in prices:
-        return 1 / prices[f"{asset}USD"]
+        return 1 / prices[f"{asset}USD"][0]
     elif f"BTC{asset}" in prices:
-        btc_price = prices['BTCUSD']
-        return btc_price / prices[f"BTC{asset}"]
-    return 1.0
+        btc_price = prices['BTCUSD'][0]
+        return btc_price / prices[f"BTC{asset}"][0]
+    return None
 
 
 def get_nominating_asset(identifier):
-    for asset in NOMINATING_ASSETS:
-        if identifier.endswith(asset):
-            return asset
-    return None
+    nominating_asset_map = {}
+
+    def get_nominating_asset_internal():
+        nonlocal nominating_asset_map
+        if identifier in nominating_asset_map:
+            return nominating_asset_map[identifier]
+        nominating_asset = None
+        for asset in NOMINATING_ASSETS:
+            if identifier.endswith(asset):
+                nominating_asset = asset
+        nominating_asset_map.update({identifier: nominating_asset})
+        return nominating_asset
+    return get_nominating_asset_internal()
