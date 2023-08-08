@@ -4,3 +4,4 @@ Todo
  - ~~Enable caching.~~
  - improve design & caching
  - add sentiment tracker command
+ - make code more robust for changes at Coinmetro's side (limited possibilities given their API)
