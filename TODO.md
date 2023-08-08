@@ -1,4 +1,0 @@
-
- - ~~Enable caching.~~
- - Re-design ; make `Command` a class hierarchy where every instance processes the logic itself. Cache is a separate object.
- - Avoid linear search & redundant mappings.
