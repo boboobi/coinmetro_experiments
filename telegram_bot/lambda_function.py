@@ -32,7 +32,9 @@ def lambda_handler(event, _):
         return {
             "statusCode": 200
         }
-    except:
+    except Exception as exception:
+        print('Something went wrong.')
+        print(exception)
         return {
             "statusCode": 200
         }
@@ -62,7 +64,7 @@ def generate_text_response(message_part):
         return "@xcmonika @xcmusab @herebycm @reddug @XCMkellyXCM " \
                "@JensAtDenmark @medatank @WillDec"
     elif command is Command.CODE:
-        return "See https://github.com/boboobi/coinmetro_experiments"
+        return "See https://github.com/radagasus/coinmetro_experiments"
     return response
 
 
@@ -115,7 +117,7 @@ def calculate_volumes(price_data):
         if identifier in prices:
             price, nominating_asset = prices[identifier]
             rate = get_rate(nominating_asset, prices)
-            if rate is not None:
+            if rate is not None and price is not None:
                 price_dollar = price * rate
                 pair_volume = price_dollar * pair['v']
                 total_volume = total_volume + pair_volume
