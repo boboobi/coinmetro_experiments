@@ -11,6 +11,7 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 COINMETRO_ENDPOINT = os.environ.get('COINMETRO_ENDPOINT')
 PRICES_ENDPOINT = "/exchange/prices"
+ASSETS_ENDPOINT = "/assets"
 NOMINATING_ASSETS = ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'AUD']
 
 response_cache = {}
@@ -51,6 +52,7 @@ def generate_text_response(message_part):
                "/admin : ping admins \n" \
                "/volume : get 24h volume \n" \
                "/topvolume x : get volume for top x pairs, x from 1-20 \n" \
+               "/sentiment y : get sentiment data for asset y \n" \
                "/code: get a link to the codebase"
     elif command is Command.VOLUME:
         return get_with_caching(command, get_volume)
@@ -65,6 +67,14 @@ def generate_text_response(message_part):
                "@JensAtDenmark @medatank @WillDec"
     elif command is Command.CODE:
         return "See https://github.com/radagasus/coinmetro_experiments"
+    elif command is Command.SENTIMENT:
+        asset = get_argument_at_index(message_part, index=1)
+        sentiment_data = get_sentiment(asset)
+        if sentiment_data is not None:
+            sentiment, interest = sentiment_data
+            if interest is None:
+                return f"Sentiment: ${sentiment:,.2f}"
+            return f"Sentiment: {sentiment:,.2f}\nInterest: {interest:,.2f}"
     return response
 
 
@@ -161,3 +171,30 @@ def get_nominating_asset(identifier):
         nominating_asset_map.update({identifier: nominating_asset})
         return nominating_asset
     return get_nominating_asset_internal()
+
+
+def get_assets():
+    response = requests.get(f"{COINMETRO_ENDPOINT}{ASSETS_ENDPOINT}")
+    if response.status_code == 200:
+        return response.json()
+    return None
+
+
+def get_sentiment(identifier):
+    assets = get_with_caching(Command.ASSETS, get_assets)
+    def matches_name(asset, identifier):
+        return 'name' in asset \
+            and asset['name'].casefold() == identifier.casefold()
+    def matches_symbol(asset, identifier):
+        return 'symbol' in asset \
+            and asset['symbol'].casefold() == identifier.casefold()
+    for asset in assets:
+        if matches_name(asset, identifier) or matches_symbol(asset, identifier):
+            if 'sentimentData' in asset:
+                sentiment_data = asset['sentimentData']
+                if 'sentiment' in sentiment_data:
+                    if 'interest' in sentiment_data:
+                        return sentiment_data['sentiment'], sentiment_data['interest']
+                    return sentiment_data['sentiment'], None
+            return None
+    return None
