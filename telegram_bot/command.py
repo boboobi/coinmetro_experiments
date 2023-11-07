@@ -8,6 +8,8 @@ class Command(Enum):
     TOPVOLUME = '/topvolume'
     ADMIN = '/admin'
     CODE = '/code'
+    SENTIMENT = '/sentiment'
+    ASSETS = '/assets'
     
 
 def match_command(message):
