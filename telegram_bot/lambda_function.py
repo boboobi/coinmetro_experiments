@@ -24,12 +24,7 @@ def lambda_handler(event, _):
         text_response = generate_text_response(message_part)
         if text_response is not None:
             chat_id = body['message']['chat']['id']
-            url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
-            payload = {
-                'chat_id': chat_id,
-                'text': text_response
-            }
-            _ = requests.post(url, json=payload)
+            send_message(BOT_TOKEN, chat_id, text_response)
         return {
             "statusCode": 200
         }
@@ -39,6 +34,21 @@ def lambda_handler(event, _):
         return {
             "statusCode": 200
         }
+
+
+def send_message(bot_token, 
+    chat_id, 
+    message, 
+    parse_mode='HTML',
+    disable_web_page_preview=True):
+    preview_off = f"disable_web_page_preview={disable_web_page_preview}"
+    parameters = f'parse_mode={parse_mode}&{preview_off}'
+    url = f'https://api.telegram.org/bot{bot_token}/sendMessage?{parameters}'
+    payload = {
+        'chat_id': chat_id,
+        'text': message
+    }
+    _ = requests.post(url, json=payload)
 
 
 def generate_text_response(message_part):
@@ -72,9 +82,10 @@ def generate_text_response(message_part):
         sentiment_data = get_sentiment(asset)
         if sentiment_data is not None:
             sentiment, interest = sentiment_data
+            preface = f"Sentiment data for {asset}:\n\n"
             if interest is None:
-                return f"Sentiment: ${sentiment:,.2f}"
-            return f"Sentiment: {sentiment:,.2f}\nInterest: {interest:,.2f}"
+                return f"{preface}Sentiment: <i>{sentiment:,.2f}</i>"
+            return f"{preface}Sentiment: <i>{sentiment:,.2f}</i>\nInterest: <i>{interest:,.2f}</i>"
     return response
 
 
