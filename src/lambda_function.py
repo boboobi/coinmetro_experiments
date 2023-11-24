@@ -76,7 +76,7 @@ def generate_text_response(message_part):
         return "@xcmonika @xcmusab @herebycm @reddug @XCMkellyXCM " \
                "@JensAtDenmark @medatank @WillDec"
     elif command is Command.CODE:
-        return "See https://github.com/radagasus/coinmetro_experiments"
+        return "See https://github.com/radagasus/coinmetro_bot"
     elif command is Command.SENTIMENT:
         asset = get_argument_at_index(message_part, index=1)
         sentiment_data = get_sentiment(asset)
