@@ -12,7 +12,8 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 COINMETRO_ENDPOINT = os.environ.get('COINMETRO_ENDPOINT')
 PRICES_ENDPOINT = "/exchange/prices"
 ASSETS_ENDPOINT = "/assets"
-NOMINATING_ASSETS = ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'AUD']
+NOMINATING_ASSETS = ['USD', 'USDT', 'USDC', 'EUR', 'GBP', 'BTC', 'ETH', 'AUD']
+NOMINATING_ASSET_MAP = {} # used as cache
 
 response_cache = {}
 
@@ -156,30 +157,31 @@ def get_prices(price_data):
 
 
 def get_rate(asset, prices):
-    if asset == 'USD':
+    usd_tickers = ['USD', 'USDT', 'USDC']
+    if asset in usd_tickers:
         return 1.0
-    if f"{asset}USD" in prices:
-        return prices[f"{asset}USD"][0]
-    elif f"USD{asset}" in prices:
-        return 1 / prices[f"{asset}USD"][0]
-    elif f"BTC{asset}" in prices:
+    for usd_ticker in usd_tickers:
+        pair_id = f"{asset}{usd_ticker}"
+        if pair_id in prices:
+            return prices[pair_id][0]
+        inverted_pair_id = f"{usd_ticker}{asset}"
+        if inverted_pair_id in prices:
+            return 1 / prices[inverted_pair_id][0]
+    if f"BTC{asset}" in prices:
         btc_price = prices['BTCUSD'][0]
         return btc_price / prices[f"BTC{asset}"][0]
     return None
 
 
 def get_nominating_asset(identifier):
-    nominating_asset_map = {}
-
     def get_nominating_asset_internal():
-        nonlocal nominating_asset_map
-        if identifier in nominating_asset_map:
-            return nominating_asset_map[identifier]
+        if identifier in NOMINATING_ASSET_MAP:
+            return NOMINATING_ASSET_MAP[identifier]
         nominating_asset = None
         for asset in NOMINATING_ASSETS:
             if identifier.endswith(asset):
                 nominating_asset = asset
-        nominating_asset_map.update({identifier: nominating_asset})
+        NOMINATING_ASSET_MAP.update({identifier: nominating_asset})
         return nominating_asset
     return get_nominating_asset_internal()
 
