@@ -62,7 +62,7 @@ def generate_text_response(message_part):
         return "Here's an overview of commands : \n" \
                "/admin : ping admins \n" \
                "/volume : get 24h volume \n" \
-               "/topvolume x : get volume for top x pairs, x from 1-20 \n" \
+               "/topvolume x : get volume for top x pairs, x from 1-40 \n" \
                "/sentiment y : get sentiment data for asset y \n" \
                "/code: get a link to the codebase"
     elif command is Command.VOLUME:
@@ -71,7 +71,7 @@ def generate_text_response(message_part):
         nb = get_numerical_argument_at_index(message_part, index=1)
         if nb is None:
             nb = 10
-        if nb > 0 and nb < 21:
+        if nb > 0 and nb < 41:
             return get_volume(leading_text=False, nb_top=nb)
     elif command is Command.ADMIN:
         return "@xcmonika @xcmusab @herebycm @reddug @XCMkellyXCM " \
